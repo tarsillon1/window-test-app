@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Window Test App</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="stylesheets/screen.css" type="text/css" media="screen" charset="utf-8">
+</head>
+<body>
+
+<div id="page">
+    <div id="header">
+        <h1>Window Test App</h1>
+    </div>
+
+    <div id="navigation">
+    </div>
+
+    <div id="body" class="wrapper">
+        <div id="introduction">
+            <form class="hform">
+                <fieldset>
+                    <legend>Test form</legend>
+                    <p><label>Windows</label>
+                        <input type="number" name="Windows" value="" id="numWindows"></p>
+                    <p><label>Length</label>
+                        <input type="number" name="Length" value="" id="timeLength"></p>
+                    <p><label>Platform</label>
+                        <select id="platform">
+                            <option value="Chrome">Chrome</option>
+                            <option value="OpenFin">OpenFin</option>
+                            <option value="Electron">Electron</option>
+                        </select>
+                </fieldset>
+            </form>
+            <p>
+                <button name="run" onclick="run()" value="Run" class="button">Run</button>
+            </p>
+        </div>
+        <div id="resources">
+            <h3>Run a window test</h3>
+            <ul>
+                <li>Specify a max number of windows to open and close during the test.</li>
+                <li>Specify a time length to run the test for.</li>
+                <li>Specify the platform the tests are being run on.</li>
+                <li>Memory consumption logs will be computed automatically.</li>
+                <li>All logs will be forwarded to the OpenFin Aggregator.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="footer">
+        <p class="quiet">
+            <small>OpenFin</small>
+        </p>
+    </div>
+</div>
+
+</body>
+
+<script>
+    let interval;
+    let children = [];
+
+    function run() {
+        if (interval) stop();
+
+        let select = document.getElementById("platform");
+        $.post("/track", { platform: select.options[select.selectedIndex].text });
+        $.post("/event", {event: "Window Test Started"});
+
+        let numWindows = Number.parseInt(document.getElementById("numWindows").value);
+        let timeLength = Number.parseInt(document.getElementById("timeLength").value);
+
+        let startTime = Date.now();
+        interval = setInterval(() => {
+            if (startTime + timeLength < Date.now()) stop();
+
+            for (let i = 0; i < numWindows; i++) {
+                if ((!children[i] || children[i].closed)) {
+                    children[i] = window.open("child.html");
+                }
+            }
+        }, 1);
+    }
+
+    function stop() {
+        clearInterval(interval);
+        interval = null;
+        children = [];
+
+        $.post("/event", {event: "Window Test Ended"});
+    }
+</script>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "window-test-app",
+  "author": "Nicholas Tarsillo",
+  "description": "Nick embracing javascript?",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "node ./bin/www",
+    "format": "prettier --write \"routes/**/*\""
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "express": "~4.16.0",
+    "morgan": "~1.9.0",
+    "axios": "^0.18.0",
+    "dotenv": "^6.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.14.3"
+  }
+}
