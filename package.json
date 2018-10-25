@@ -8,12 +8,12 @@
     "format": "prettier --write \"routes/**/*\""
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
+    "dotenv": "^6.0.0",
     "express": "~4.16.0",
-    "morgan": "~1.9.0",
-    "axios": "^0.18.0",
-    "dotenv": "^6.0.0"
+    "morgan": "~1.9.0"
   },
   "devDependencies": {
     "prettier": "^1.14.3"

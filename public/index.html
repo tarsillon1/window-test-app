@@ -24,26 +24,36 @@
                 <fieldset>
                     <legend>Test form</legend>
                     <p><label>Windows</label>
-                        <input type="number" name="Windows" value="" id="numWindows"></p>
+                        <input type="number" name="Windows" id="numWindows"></p>
+                    <p><label>Wait</label>
+                        <input type="number" name="Wait" id="wait"></p>
                     <p><label>Length</label>
-                        <input type="number" name="Length" value="" id="timeLength"></p>
+                        <input type="number" name="Length" id="timeLength"></p>
+                    <p><label>Times</label>
+                        <input type="number" name="Times" id="times"></p>
                     <p><label>Platform</label>
                         <select id="platform">
                             <option value="Chrome">Chrome</option>
                             <option value="OpenFin">OpenFin</option>
                             <option value="Electron">Electron</option>
                         </select>
+                    <div style="float: right">
+                        <p id="running" style="display: none; color: darkgray"> Running... </p>
+                        <p id="complete" style="display : none; color: darkgray"> <b>Complete</b> </p>
+                    </div>
                 </fieldset>
             </form>
             <p>
-                <button name="run" onclick="run()" value="Run" class="button">Run</button>
+                <button id="run" style="display:inline;" onclick="run()" value="Run" class="button">Run</button>
             </p>
         </div>
         <div id="resources">
             <h3>Run a window test</h3>
             <ul>
                 <li>Specify a max number of windows to open and close during the test.</li>
+                <li>Specify the amount of time to wait before running each test run.</li>
                 <li>Specify a time length to run the test for.</li>
+                <li>Specify the amount of times to run the test.</li>
                 <li>Specify the platform the tests are being run on.</li>
                 <li>Memory consumption logs will be computed automatically.</li>
                 <li>All logs will be forwarded to the OpenFin Aggregator.</li>
@@ -61,35 +71,50 @@
 </body>
 
 <script>
-    let interval;
-    let children = [];
+    let interval,
+        children = [];
 
     function run() {
         if (interval) stop();
 
-        let select = document.getElementById("platform");
-        $.post("/track", { platform: select.options[select.selectedIndex].text });
-        $.post("/event", {event: "Window Test Started"});
-
+        var complete = document.getElementById("complete");
+        let running = document.getElementById("running");
         let numWindows = Number.parseInt(document.getElementById("numWindows").value);
         let timeLength = Number.parseInt(document.getElementById("timeLength").value);
+        let wait = Number.parseInt(document.getElementById("wait").value);
+        let times = Number.parseInt(document.getElementById("times").value);
+        let select = document.getElementById("platform");
 
-        let startTime = Date.now();
-        interval = setInterval(() => {
-            if (startTime + timeLength < Date.now()) stop();
+        $.post("/track", { track: select.options[select.selectedIndex].text });
 
-            for (let i = 0; i < numWindows; i++) {
-                if ((!children[i] || children[i].closed)) {
-                    children[i] = window.open("child.html");
-                }
-            }
-        }, 1);
+        complete.style.display = "none";
+        running.style.display = "inline";
+        for (let i = 0; i < times; i ++) {
+            setTimeout(() => {
+                $.post("/event", { event: "Window Test Started" });
+
+                let startTime = Date.now();
+                interval = setInterval(() => {
+                    if (startTime + timeLength < Date.now()) stop();
+
+                    for (let i = 0; i < numWindows; i++) {
+                        if ((!children[i] || children[i].closed)) {
+                            children[i] = window.open("child.html");
+                        }
+                    }
+                }, 1);
+            }, (wait * (i + 1)) + (timeLength * i));
+        }
+
+        setTimeout(() => {
+            complete.style.display = "inline";
+            running.style.display = "none";
+        }, (wait * times) + (timeLength * times));
     }
 
     function stop() {
         clearInterval(interval);
         interval = null;
-        children = [];
 
         $.post("/event", {event: "Window Test Ended"});
     }
